@@ -37,8 +37,11 @@ model = Sequential([
 
 model.compile(loss='MAE', optimizer='adam', metrics=['MeanSquaredError'])
 
-esc = EarlyStopping(monitor="loss", patience=5)
-history = model.fit(train_features, train_target, epochs=1000000, callbacks=[esc])
+# esc = EarlyStopping(monitor="loss", patience=5)
+# history = model.fit(train_features, train_target, epochs=1000000, callbacks=[esc])
+esc = EarlyStopping(monitor="loss", patience=2)
+history = model.fit(np.concatenate([train_features, predict_features]), np.concatenate([train_target, predict_target]),
+                    epochs=1000000, callbacks=[esc], validation_split=0.1, shuffle=True)
 
 # loss, accuracy = model.evaluate(train_features, train_target)
 # print(f"Точность модели: {accuracy * 100:.2f}%")
@@ -50,16 +53,19 @@ df_pr_train = pd.DataFrame({"prediction": train_pr.T[0], "target": train_target.
 df_pr_pr = pd.DataFrame({"prediction": predict_pr.T[0], "target": predict_target.T[0], "abs": abs(predict_pr.T[0]-predict_target.T[0])})
 
 plt.plot(history.history["loss"], label="loss")
+plt.plot(history.history["val_loss"], label="val_loss")
 plt.xlabel("Эпоха обучения")
 plt.ylabel("Ошибка (MAE)")
 plt.legend()
 plt.show()
 
-plt.plot(df_pr_pr["abs"], label="abs")
+plt.plot(np.concatenate([df_pr_pr["abs"], df_pr_train["abs"]]), label="abs")
 plt.show()
 
-plt.plot(df_pr_train["abs"], label="abs")
-plt.show()
+# plt.plot(df_pr_train["abs"], label="abs")
+# plt.show()
+
+
 # model.save('gumus_model')
 # model_loaded = keras.models.load_model('16_model')
 # predictions = model_loaded.predict(InputArr)
